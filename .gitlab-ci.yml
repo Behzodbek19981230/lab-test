@@ -1,0 +1,71 @@
+stages:
+  - dev_pull_and_deploy
+  - dev_publish
+  - prod_pull_and_deploy
+  - prod_publish
+
+dev_pull:
+  stage: dev_pull_and_deploy
+  script:
+    - cd $PROJECT_PATH_DEV
+    - pwd
+    - git pull
+    - git status
+    - cd $PROJECT_PATH_DEV
+    - pwd
+    - npm i
+    - npm run build
+  after_script:
+    - ./notify.sh
+  only:
+    - dev
+  tags:
+    - dev
+
+dev_publish:
+  stage: dev_publish
+  script:
+    - cd $PROJECT_PATH_DEV
+    - pwd
+    - pm2 status
+    - pm2 stop $PM2_NAME_DEV || true
+    - pm2 delete $PM2_NAME_DEV || true
+    - pm2 start npm --name $PM2_NAME_DEV -- start
+  after_script:
+    - ./notify.sh
+  only:
+    - dev
+  tags:
+    - dev
+
+prod_pull:
+  stage: prod_pull_and_deploy
+  script:
+    - cd $PROJECT_PATH_PROD
+    - pwd
+    - git pull
+    - git status
+    - npm i
+    - npm run build
+  after_script:
+    - ./notify.sh
+  only:
+    - main
+  tags:
+    - prod
+
+prod_publish:
+  stage: prod_publish
+  script:
+    - cd $PROJECT_PATH_PROD
+    - pwd
+    - pm2 status
+    - pm2 stop $PM2_NAME_PROD || true
+    - pm2 delete $PM2_NAME_PROD || true
+    - pm2 start npm --name $PM2_NAME_PROD -- start
+  after_script:
+    - ./notify.sh
+  only:
+    - main
+  tags:
+    - prod
